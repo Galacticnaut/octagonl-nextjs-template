@@ -1,0 +1,79 @@
+# Deploy to Dev — Azure App Service
+# Required GitHub Environment secrets (app-azure-dev):
+#   AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID
+#   PLATFORM_API_BASE_URL, NEXTAUTH_URL, NEXTAUTH_SECRET
+#   OIDC_ISSUER, OIDC_CLIENT_ID, OIDC_CLIENT_SECRET
+name: Deploy Dev
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+# TODO: Update these values for your app
+env:
+  APP_SERVICE: app-octagonl-APPNAME-dev-portal
+  RESOURCE_GROUP: rg-octagonl-APPNAME-dev
+
+jobs:
+  build-and-deploy:
+    name: Build & Deploy (Dev)
+    runs-on: ubuntu-latest
+    environment: app-azure-dev
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - run: npm ci
+
+      - name: Build
+        env:
+          NEXT_PUBLIC_PLATFORM_API_BASE_URL: ${{ secrets.PLATFORM_API_BASE_URL }}
+        run: npm run build
+
+      - name: Package standalone output
+        run: |
+          cp -r .next/static .next/standalone/.next/static
+          cp -r public .next/standalone/public 2>/dev/null || true
+          cd .next/standalone && zip -r ../../deploy.zip .
+
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Set runtime configuration
+        uses: azure/CLI@v2
+        with:
+          inlineScript: |
+            az webapp config appsettings set \
+              --name ${{ env.APP_SERVICE }} \
+              --resource-group ${{ env.RESOURCE_GROUP }} \
+              --settings \
+                WEBSITE_RUN_FROM_PACKAGE=1 \
+                PLATFORM_API_BASE_URL="${{ secrets.PLATFORM_API_BASE_URL }}" \
+                NEXTAUTH_URL="${{ secrets.NEXTAUTH_URL }}" \
+                NEXTAUTH_SECRET="${{ secrets.NEXTAUTH_SECRET }}" \
+                OIDC_ISSUER="${{ secrets.OIDC_ISSUER }}" \
+                OIDC_CLIENT_ID="${{ secrets.OIDC_CLIENT_ID }}" \
+                OIDC_CLIENT_SECRET="${{ secrets.OIDC_CLIENT_SECRET }}"
+
+      - name: Deploy to App Service
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ env.APP_SERVICE }}
+          package: deploy.zip
+
+      - uses: azure/CLI@v2
+        if: always()
+        with:
+          inlineScript: az logout
