@@ -13,11 +13,12 @@ export const authOptions: NextAuthOptions = {
     {
       id: "azure-ad",
       name: "Octagonl Account",
-      type: "oidc",
-      issuer: process.env.OIDC_ISSUER,
+      type: "oauth",
+      wellKnown: `${process.env.OIDC_ISSUER}/.well-known/openid-configuration`,
       clientId: process.env.OIDC_CLIENT_ID!,
       clientSecret: process.env.OIDC_CLIENT_SECRET!,
       authorization: { params: { scope: "openid profile email" } },
+      idToken: true,
       profile(profile) {
         return {
           id: profile.oid ?? profile.sub,
@@ -39,8 +40,9 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token }) {
       if (session.user) {
         (session.user as Record<string, unknown>).entraOid = token.entraOid;
-        (session as Record<string, unknown>).accessToken = token.accessToken;
       }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (session as any).accessToken = token.accessToken;
       return session;
     },
   },

@@ -4,7 +4,7 @@
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_PLATFORM_API_BASE_URL ||
   process.env.PLATFORM_API_BASE_URL ||
-  "http://localhost:8080"\;
+  "http://localhost:8080";
 
 interface RequestOptions { accessToken: string; requestId?: string; }
 
