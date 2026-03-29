@@ -6,7 +6,7 @@ This is an Octagonl platform application built with Next.js. Follow these conven
 - This app is part of the Octagonl platform ecosystem at `octago.nl`
 - Authentication is handled by Microsoft Entra External ID (centralized SSO)
 - The app deploys to Azure App Service via GitHub Actions with OIDC federation
-- Platform docs are in the `docs/octagonl-platform-infra/` git submodule
+- Platform docs are in the `docs/octagonl-docs/` git submodule
 
 ## Authentication Rules
 - **Use `oid` claim, NOT `sub`** — `sub` is pairwise in Microsoft Entra (differs between app registrations). `oid` (Object ID) is stable across all Octagonl apps. Store it as `entra_oid`.
@@ -52,4 +52,4 @@ This is an Octagonl platform application built with Next.js. Follow these conven
 - Session provider: `src/components/providers.tsx`
 - Brand tokens: `shared/tailwind-brand.js`
 - Infra modules: `infra/modules/*.bicep`
-- Integration docs: `docs/octagonl-platform-infra/docs/app-integration/`
+- Integration docs: `docs/octagonl-docs/app-integration/`
