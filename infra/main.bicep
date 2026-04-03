@@ -1,4 +1,5 @@
 // Main deployment orchestrator
+// Uses shared infrastructure modules from octagonl-shared
 // Usage: az deployment group create -g rg-octagonl-APPNAME-dev -f infra/main.bicep -p appName=APPNAME postgresAdminPassword=<pw>
 // TODO: Replace APPNAME with your app name
 
@@ -31,17 +32,17 @@ var tags = {
   managedBy: 'bicep'
 }
 
-module monitoring 'modules/monitoring.bicep' = {
+module monitoring '../shared/infra/modules/monitoring.bicep' = {
   name: 'monitoring'
   params: { baseName: baseName, location: location, tags: tags }
 }
 
-module keyVault 'modules/keyvault.bicep' = {
+module keyVault '../shared/infra/modules/keyvault.bicep' = {
   name: 'keyvault'
   params: { baseName: baseName, location: location, tags: tags }
 }
 
-module appService 'modules/app-service.bicep' = {
+module appService '../shared/infra/modules/app-service.bicep' = {
   name: 'app-service'
   params: {
     baseName: baseName
@@ -53,7 +54,7 @@ module appService 'modules/app-service.bicep' = {
   }
 }
 
-module postgres 'modules/postgres.bicep' = if (deployPostgres) {
+module postgres '../shared/infra/modules/postgres.bicep' = if (deployPostgres) {
   name: 'postgres'
   params: {
     baseName: baseName
@@ -64,11 +65,11 @@ module postgres 'modules/postgres.bicep' = if (deployPostgres) {
   }
 }
 
-module roleAssignments 'modules/role-assignments.bicep' = {
+module roleAssignments '../shared/infra/modules/role-assignments.bicep' = {
   name: 'role-assignments'
   params: {
     keyVaultId: keyVault.outputs.keyVaultId
-    principalId: appService.outputs.webAppPrincipalId
+    apiPrincipalId: appService.outputs.webAppPrincipalId
   }
 }
 
