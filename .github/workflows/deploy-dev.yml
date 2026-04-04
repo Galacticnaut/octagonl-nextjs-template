@@ -68,7 +68,7 @@ jobs:
                 OIDC_CLIENT_SECRET="${{ secrets.OIDC_CLIENT_SECRET }}"
 
       - name: Deploy to App Service
-        uses: azure/webapps-deploy@v3
+        uses: azure/webapps-deploy@v3.0.8
         with:
           app-name: ${{ env.APP_SERVICE }}
           package: deploy.zip
